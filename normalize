@@ -1,24 +1,42 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby -s
 
 require 'csv'
 
-input = ARGF.readlines
-
-puts input
-
-clean = []
-input.each do |line|
-  if line.valid_encoding? then
-    clean << line
-  else
-    puts "BAD LINE" + line
+def preprocess(input)
+  clean = []
+  input.each do |line|
+    if line.valid_encoding? then
+      clean << line.rstrip
+    else
+      puts "BAD LINE" + line
+    end
   end
+  clean.join("\n")
 end
 
-clean = clean.join('\n')
+class Normalize
 
-puts
-puts clean
+  def initialize
+  end
+
+end
+
+# Primitive option handling
+if $h then
+  puts "Usage"
+  exit
+end
+
+
+input = ARGF.readlines
+clean = preprocess(input)
+
+# Display preprocessed data
+if $p then
+  puts
+  puts clean
+  exit
+end
 
 
 rows = []
@@ -28,6 +46,5 @@ CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
   rows << row
 end
 
-puts input
 puts
 puts rows
