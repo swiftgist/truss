@@ -1,6 +1,8 @@
 #!/usr/bin/ruby -s
 
 require 'csv'
+require 'time'
+require 'date'
 
 def preprocess(input)
   clean = []
@@ -8,20 +10,65 @@ def preprocess(input)
     if line.valid_encoding? then
       clean << line.rstrip
     else
-      puts "BAD LINE" + line
+      #puts "BAD LINE" + line
+      puts
     end
   end
   clean.join("\n")
 end
 
-class Normalize
+def total_seconds(duration)
+  h, m, s = duration.split(':').map(&:to_f) 
+  3600 * h + 60 * m + s
+end
 
-  def initialize
+class Entry
+
+  attr_accessor :row
+
+  def initialize()
+  end
+
+  def normalize
+  end
+
+  def timestamp
+    dt = DateTime.strptime(@row[:timestamp], "%m/%d/%y %H:%M:%S %p")
+    t = Time.parse(dt.to_s.sub!("+00", "-07")).utc
+    @row[:timestamp] = t.to_datetime.new_offset('-04:00').to_s
+
+  end
+
+  def address
+    #No change
+  end
+
+  def zip
+    @row[:zip] = sprintf("%05d", @row[:zip])
+  end
+
+  def fullname
+    @row[:fullname].upcase!
+  end
+
+  def fooduration
+    @row[:fooduration] = total_seconds(@row[:fooduration])
+  end
+
+  def barduration
+    @row[:barduration] = total_seconds(@row[:barduration])
+  end
+
+  def totalduration
+    @row[:totalduration] = @row[:fooduration] + @row[:barduration]
+  end
+
+  def notes
   end
 
 end
 
-# Primitive option handling
+# Print usage
 if $h then
   puts "Usage"
   exit
@@ -41,9 +88,20 @@ end
 
 rows = []
 CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
-  row = row.to_h
-  row = row.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
-  rows << row
+  entry = Entry.new
+  # Convert csv row to hash with keyword symbols
+  entry.row = row.to_h.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
+  entry.normalize
+  entry.timestamp
+  entry.fullname
+  entry.zip
+  entry.fooduration
+  entry.barduration
+  entry.totalduration
+  
+
+  
+  rows << entry.row
 end
 
 puts
