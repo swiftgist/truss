@@ -1,0 +1,33 @@
+#!/usr/bin/ruby
+
+require 'csv'
+
+input = ARGF.readlines
+
+puts input
+
+clean = []
+input.each do |line|
+  if line.valid_encoding? then
+    clean << line
+  else
+    puts "BAD LINE" + line
+  end
+end
+
+clean = clean.join('\n')
+
+puts
+puts clean
+
+
+rows = []
+CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
+  row = row.to_h
+  row = row.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
+  rows << row
+end
+
+puts input
+puts
+puts rows
