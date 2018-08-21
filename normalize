@@ -40,7 +40,7 @@ class Entry
   end
 
   def address
-    #No change
+    @row[:address] = sprintf("\"%s\"", @row[:address]) if @row[:address].include?","
   end
 
   def zip
@@ -64,6 +64,9 @@ class Entry
   end
 
   def notes
+    if @row[:notes] and @row[:notes].include?"," then
+      @row[:notes] = sprintf("\"%s\"", @row[:notes]) 
+    end
   end
 
 end
@@ -93,11 +96,13 @@ CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
   entry.row = row.to_h.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
   entry.normalize
   entry.timestamp
+  entry.address
   entry.fullname
   entry.zip
   entry.fooduration
   entry.barduration
   entry.totalduration
+  entry.notes
   
 
   
@@ -105,4 +110,5 @@ CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
 end
 
 puts
-puts rows
+puts rows[0].keys.join(',')
+rows.each {|row| puts row.values.join(',')}
