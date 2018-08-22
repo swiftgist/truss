@@ -36,7 +36,6 @@ class Entry
     dt = DateTime.strptime(@row[:timestamp], "%m/%d/%y %H:%M:%S %p")
     t = Time.parse(dt.to_s.sub!("+00", "-07")).utc
     @row[:timestamp] = t.to_datetime.new_offset('-04:00').to_s
-
   end
 
   def address
@@ -71,44 +70,45 @@ class Entry
 
 end
 
-# Print usage
-if $h then
-  puts "Usage"
-  exit
-end
-
-
-input = ARGF.readlines
-clean = preprocess(input)
-
-# Display preprocessed data
-if $p then
+# main
+if __FILE__ == $0
+  # Print usage
+  if $h then
+    puts "Usage"
+    exit
+  end
+  
+  
+  input = ARGF.readlines
+  clean = preprocess(input)
+  
+  # Display preprocessed data
+  if $p then
+    puts
+    puts clean
+    exit
+  end
+  
+  
+  rows = []
+  CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
+    entry = Entry.new
+    # Convert csv row to hash with keyword symbols
+    entry.row = row.to_h.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
+    entry.normalize
+    entry.timestamp
+    entry.address
+    entry.fullname
+    entry.zip
+    entry.fooduration
+    entry.barduration
+    entry.totalduration
+    entry.notes
+    
+    rows << entry.row
+  end
+  
   puts
-  puts clean
-  exit
+  puts rows[0].keys.join(',')
+  rows.each {|row| puts row.values.join(',')}
 end
-
-
-rows = []
-CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
-  entry = Entry.new
-  # Convert csv row to hash with keyword symbols
-  entry.row = row.to_h.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
-  entry.normalize
-  entry.timestamp
-  entry.address
-  entry.fullname
-  entry.zip
-  entry.fooduration
-  entry.barduration
-  entry.totalduration
-  entry.notes
-  
-
-  
-  rows << entry.row
-end
-
-puts
-puts rows[0].keys.join(',')
-rows.each {|row| puts row.values.join(',')}

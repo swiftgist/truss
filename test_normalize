@@ -1,0 +1,124 @@
+#!/usr/bin/ruby
+
+require 'minitest/spec'
+require 'minitest/autorun'
+
+load 'normalize'
+
+describe Entry do
+
+  before do
+    @entry = Entry.new
+  end
+
+  # Timestamp
+  describe "when timestamp works" do
+    it "must convert to ISO 8601 and from PDT to EDT" do
+      @entry.row = {:timestamp => "4/1/11 11:00:00 AM"}
+      @entry.timestamp.must_equal "2011-04-01T14:00:00-04:00"
+    end
+  end
+
+  # Address
+  describe "when address works" do
+    it "must add quotes" do
+      @entry.row = {:address => "123 Main Street, Random City"}
+      @entry.address.must_equal '"123 Main Street, Random City"'
+    end
+  end
+
+  describe "when address remains unchanged" do
+    it "must do nothing" do
+      @entry.row = {:address => "123 Main Street"}
+      @entry.address.must_be_nil
+    end
+  end
+
+  # Zip
+  describe "when zip works" do
+    it "must prefix 0" do
+      @entry.row = {:zip => "123"}
+      @entry.zip.must_equal "00123"
+    end
+  end
+
+  describe "when zip works with valid zipcode" do
+    it "must do nothing" do
+      @entry.row = {:zip => "12345"}
+      @entry.zip.must_equal "12345"
+    end
+  end
+
+  # Fullname
+  describe "when fullname works" do
+    it "must uppercase" do
+      @entry.row = {:fullname => "Name"}
+      @entry.fullname.must_equal "NAME"
+    end
+  end
+
+  describe "when fullname works on non-English" do
+    it "must not change" do
+      @entry.row = {:fullname => "株式会社スタジオジブリ"}
+      @entry.fullname.must_be_nil
+    end
+  end
+
+  describe "when fullname fails" do
+    it "must uppercase" do
+      @entry.row = {:fullname => "name"}
+      @entry.fullname.wont_equal "name"
+    end
+  end
+
+  # Fooduration
+  describe "when fooduration works" do
+    it "must convert H:M:S.MS to seconds" do
+      @entry.row = {:fooduration => "1:23:32.123"}
+      @entry.fooduration.must_equal 5012.123
+    end
+  end
+
+  # Barduration
+  describe "when barduration works" do
+    it "must convert H:M:S.MS to seconds" do
+      @entry.row = {:barduration => "1:23:32.123"}
+      @entry.barduration.must_equal 5012.123
+    end
+  end
+
+  # Totalduration
+  describe "when totalduration works" do
+    it "must sum fooduration and barduration" do
+      @entry.row = {:fooduration => "1:23:32.123",
+                    :barduration => "1:23:32.123"}
+      @entry.fooduration
+      @entry.barduration
+      @entry.totalduration.must_equal 10024.246
+    end
+  end
+
+  # Notes
+  describe "when notes are empty" do
+    it "must return nil" do
+      @entry.row = {}
+      @entry.notes.must_be_nil
+    end
+  end
+
+  describe "when notes do not contain a comma" do
+    it "must return nil" do
+      @entry.row = {:notes => "Just some text"}
+      @entry.notes.must_be_nil
+    end
+  end
+
+  describe "when notes contain a comma" do
+    it "must add quotes" do
+      @entry.row = {:notes => "A list of a, b and c"}
+      @entry.notes.must_equal '"A list of a, b and c"'
+    end
+  end
+
+end
+
