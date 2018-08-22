@@ -115,6 +115,6 @@ if __FILE__ == $0
     rows << entry.row
   end
   
-  puts rows[0].keys.join(',')
+  puts rows[0].keys.map{|header| header.capitalize}.join(',')
   rows.each {|row| puts row.values.join(',')}
 end
