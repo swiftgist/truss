@@ -4,32 +4,45 @@ require 'csv'
 require 'time'
 require 'date'
 
+# Correct/Remove invalid records
 def preprocess(input)
   clean = []
   input.each do |line|
     if line.valid_encoding? then
       clean << line.rstrip
     else
-      #puts "BAD LINE" + line
-      puts
+      begin
+        clean << line.encode('UTF-8', :invalid => :replace, :undef => :replace).rstrip
+      rescue
+        STDERR.puts "WARNING - Invalid encoding: " + line
+      end
+
     end
   end
   clean.join("\n")
 end
 
+# Calculate seconds from H:M:S.MS format
 def total_seconds(duration)
   h, m, s = duration.split(':').map(&:to_f) 
   3600 * h + 60 * m + s
 end
 
+# Contains a method for each CSV header to transform data as necessary
 class Entry
 
   attr_accessor :row
 
-  def initialize()
-  end
-
+  # Wrapper
   def normalize
+    timestamp
+    address
+    zip
+    fullname
+    fooduration
+    barduration
+    totalduration
+    notes
   end
 
   def timestamp
@@ -39,6 +52,7 @@ class Entry
   end
 
   def address
+    # Preserve quotes
     @row[:address] = sprintf("\"%s\"", @row[:address]) if @row[:address].include?","
   end
 
@@ -64,6 +78,7 @@ class Entry
 
   def notes
     if @row[:notes] and @row[:notes].include?"," then
+      # Preserve quotes
       @row[:notes] = sprintf("\"%s\"", @row[:notes]) 
     end
   end
@@ -96,19 +111,10 @@ if __FILE__ == $0
     # Convert csv row to hash with keyword symbols
     entry.row = row.to_h.each_with_object({}){ |(k,v), h| h[k.to_sym] = v }
     entry.normalize
-    entry.timestamp
-    entry.address
-    entry.fullname
-    entry.zip
-    entry.fooduration
-    entry.barduration
-    entry.totalduration
-    entry.notes
     
     rows << entry.row
   end
   
-  puts
   puts rows[0].keys.join(',')
   rows.each {|row| puts row.values.join(',')}
 end
