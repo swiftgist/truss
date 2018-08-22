@@ -74,21 +74,21 @@ end
 if __FILE__ == $0
   # Print usage
   if $h then
-    puts "Usage"
+    puts "Usage: normalize [-p] < [FILE]"
+    puts "       normalize [-h]"
+    puts "       -h   this help message"
+    puts "       -p   display preprocessed data"
     exit
   end
-  
   
   input = ARGF.readlines
   clean = preprocess(input)
   
   # Display preprocessed data
   if $p then
-    puts
     puts clean
     exit
   end
-  
   
   rows = []
   CSV.parse(clean, headers: true, header_converters: :symbol) do |row|
